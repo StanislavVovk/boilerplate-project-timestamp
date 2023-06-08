@@ -17,9 +17,8 @@ https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices
     );
 });
 
-router.get("/api/timestamp/:date?", (req, res) => {
-    let s = req.params.date;
-    return res.json(genResponse(s));
+router.get("/api/:date?", (req, res) => {
+    return res.json(genResponse(req.params.date));
 });
 
 function genResponse(s) {
@@ -27,7 +26,6 @@ function genResponse(s) {
     if (date.toUTCString() === "Invalid Date") {
         return { error: date.toUTCString() };
     }
-
     return {
         unix: Math.floor(date.getTime()),
         utc: date.toUTCString()
@@ -38,12 +36,9 @@ function parseDateString(s) {
     if (!s) {
         return new Date();
     }
-
-    if (s.match(/^\d+$/)) {
-        let ts = parseInt(s);
-        return new Date(ts);
+    else if (s.match(/^\d+$/)) {
+        return new Date(parseInt(s));
     }
-
     return new Date(s);
 }
 
