@@ -1,56 +1,50 @@
-// index.js
-// where your node app starts
+const express = require("express");
+const router = express.Router();
 
-// init project
-const util = require('node:util');
-const express = require('express');
-const app = express();
+const cors = require("cors");
+router.use(cors({ optionsSuccessStatus: 200 }));
 
-// enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-// so that your API is remotely testable by FCC
-const cors = require('cors');
-app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
+router.get("/", (req, res) => {
+    return res.end(`
+This is build for a FCC final project. Exposed API on this path:
 
-// http://expressjs.com/en/starter/static-files.html
-app.use(express.static('public'));
+GET ./api/timestamp/:date?
 
-// http://expressjs.com/en/starter/basic-routing.html
-app.get("/", function (req, res) {
-    res.sendFile(__dirname + '/views/index.html');
+See the FCC link for usage details.
+
+https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/timestamp-microservice
+`.trim()
+    );
 });
 
-
-// your first API endpoint...
-app.get("/api/hello", function (req, res) {
-    res.json({greeting: 'hello API'});
+router.get("/api/timestamp/:date?", (req, res) => {
+    let s = req.params.date;
+    return res.json(genResponse(s));
 });
 
-app.get('/api/:date?', (req, res) => {
-    const date = req.params.date
-    const checkDate = Date.parse(date)
-    if (!date) return res.json({unix: Date.now(), utc: new Date(Date.now()).toUTCString()})
-    if (isNaN(checkDate)) {
-        if (isNaN(Number(date))) {
-            res.json({error: "Invalid Date"})
-        } else {
-            res.json({
-                unix: Number(date),
-                utc: (new Date(Number(date))).toUTCString()
-            })
-        }
-    } else {
-        res.json({
-            unix: Date.parse(date),
-            utc: new Date(date),
-        })
+function genResponse(s) {
+    let date = parseDateString(s);
+    if (date.toUTCString() === "Invalid Date") {
+        return { error: date.toUTCString() };
     }
 
+    return {
+        unix: Math.floor(date.getTime()),
+        utc: date.toUTCString()
+    };
+}
 
-})
-app.get('/*', (req, res) => {
-    res.json({'error': 'Invalid Date'})
-})
-// listen for requests :)
-const listener = app.listen(process.env.PORT, function () {
-    console.log('Your app is listening on port ' + listener.address().port);
-});
+function parseDateString(s) {
+    if (!s) {
+        return new Date();
+    }
+
+    if (s.match(/^\d+$/)) {
+        let ts = parseInt(s);
+        return new Date(ts);
+    }
+
+    return new Date(s);
+}
+
+module.exports = router;
